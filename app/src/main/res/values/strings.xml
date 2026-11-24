@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GXRAwake</string>
+    <string name="screen_title">GXRAwake</string>
+    <string name="screen_subtitle">Automatically confirms the Galaxy XR 30s inactivity warning so the headset stays awake.</string>
+
+    <string name="accessibility_service_label">GXRAwake Keep Awake</string>
+    <string name="accessibility_service_summary">Automatically dismisses the Galaxy XR inactivity warning.</string>
+    <string name="accessibility_service_description">Monitors system dialogs for the Galaxy XR standby/inactivity warning and confirms the positive button to prevent auto-shutdown.</string>
+
+    <string name="tab_main">Main</string>
+    <string name="tab_debug">Debug</string>
+
+    <string name="section_status">Status</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_needs_setup">Setup needed</string>
+    <string name="status_paused">Paused</string>
+
+    <string name="service_connected">Accessibility service is enabled and connected.</string>
+    <string name="service_enabled_not_connected">Accessibility service is enabled, waiting for system connection.</string>
+    <string name="service_disabled">Enable the Accessibility service to detect the Galaxy XR warning.</string>
+
+    <string name="battery_unrestricted">Battery optimization: Unrestricted</string>
+    <string name="battery_restricted">Battery optimization: Restricted (recommended to exempt)</string>
+
+    <string name="notifications_enabled">Notifications: Allowed</string>
+    <string name="notifications_disabled">Notifications: Permission required to show confirmation alerts</string>
+
+    <string name="boot_restore_ready">Reboot auto-restore: Ready (WRITE_SECURE_SETTINGS granted)</string>
+    <string name="boot_restore_missing_perm">Reboot auto-restore: Needs one-time ADB permission grant</string>
+
+    <string name="stats_summary">Applied %1$d times • Last: %2$s</string>
+    <string name="stats_never">Never</string>
+
+    <string name="section_wireless_setup">One-tap Setup (No PC needed)</string>
+    <string name="wireless_setup_guide">1. Tap Open Developer Options → enable Wireless debugging → open Pair device with pairing code.\n2. Enter the 6-digit code below and tap Run One-tap Setup. (Leave code blank if already paired.)</string>
+    <string name="wireless_discovery_waiting">Waiting for Wireless debugging / pairing service…</string>
+    <string name="wireless_discovery_pairing_found">Pairing detected: %1$s:%2$d (port auto-filled)</string>
+    <string name="wireless_discovery_connect_found">Wireless debugging detected (%1$s:%2$d) — ready to connect</string>
+    <string name="wireless_code_hint">6-digit pairing code</string>
+    <string name="wireless_port_hint">Pairing port (auto)</string>
+    <string name="open_dev_options">Developer options</string>
+    <string name="run_wireless_setup">Run one-tap setup</string>
+    <string name="running_wireless_setup">Running setup…</string>
+    <string name="wireless_setup_done_banner">All permissions &amp; boot auto-restore are configured.</string>
+    <string name="wireless_setup_toggle_show">Show wireless setup</string>
+    <string name="wireless_setup_toggle_hide">Hide wireless setup</string>
+
+    <string name="section_setup">Manual &amp; System Shortcuts</string>
+    <string name="enable_service_now">Enable service now</string>
+    <string name="service_enabled_now_toast">Accessibility service enabled.</string>
+    <string name="service_already_enabled_toast">Accessibility service is already enabled.</string>
+    <string name="write_secure_missing_toast">Run the one-time ADB pm grant command first.</string>
+    <string name="open_accessibility_settings">Accessibility settings</string>
+    <string name="open_battery_settings">Battery optimization</string>
+    <string name="open_app_info">App info (Restricted settings)</string>
+    <string name="request_notification_permission">Allow notifications</string>
+    <string name="notification_permission_granted">Notifications allowed</string>
+    <string name="setup_hint">If Android blocks the toggle as a restricted setting on a sideloaded APK, open App info → ⋮ menu → Allow restricted settings.</string>
+
+    <string name="section_controls">Automation</string>
+    <string name="auto_click_title">Auto-confirm warning</string>
+    <string name="auto_click_summary">Detect the Galaxy XR standby countdown dialog and press Keep on / OK.</string>
+    <string name="auto_restore_boot_title">Auto-restore after reboot</string>
+    <string name="auto_restore_boot_summary">Automatically re-enable this service after Galaxy XR reboots (requires one-time ADB permission).</string>
+    <string name="notify_on_click_title">Show confirmation notification</string>
+    <string name="notify_on_click_summary">Post a notification whenever sleep prevention is applied.</string>
+    <string name="cooldown_title">Cooldown after click</string>
+    <string name="cooldown_15s">15s</string>
+    <string name="cooldown_60s">60s</string>
+    <string name="cooldown_120s">120s</string>
+
+    <string name="section_diagnostics">Diagnostics</string>
+    <string name="verbose_logging_title">Verbose diagnostic logs</string>
+    <string name="verbose_logging_summary">Log SystemUI dialog structure snapshots and scan events for troubleshooting.</string>
+    <string name="service_info_title">Service component</string>
+    <string name="section_logs">Recent activity</string>
+    <string name="empty_events">No activity logged yet.</string>
+    <string name="refresh">Refresh</string>
+    <string name="copy_logs">Copy</string>
+    <string name="clear_logs">Clear</string>
+    <string name="logs_copied">Logs copied to clipboard.</string>
+    <string name="logs_cleared">Activity logs cleared.</string>
+    <string name="settings_open_failed">Could not open that settings screen on this device.</string>
+
+    <string name="notification_channel_name">Sleep prevention status</string>
+    <string name="notification_channel_description">Notifies when GXRAwake confirms an inactivity warning.</string>
+    <string name="notification_clicked_title">Sleep prevention applied</string>
+    <string name="notification_clicked_text">Confirmed the Galaxy XR inactivity warning (%1$s).</string>
+    <string name="clicked_event">Sleep prevention applied.</string>
+    <string name="notification_skipped_permission">Notification skipped because POST_NOTIFICATIONS is not granted.</string>
+</resources>

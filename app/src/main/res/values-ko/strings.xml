@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GXRAwake</string>
+    <string name="screen_title">GXRAwake 꺼짐 방지</string>
+    <string name="screen_subtitle">Galaxy XR 30초 대기 전환 경고가 뜨면 확인 버튼을 자동으로 눌러 꺼짐을 방지합니다.</string>
+
+    <string name="accessibility_service_label">GXRAwake 꺼짐 방지</string>
+    <string name="accessibility_service_summary">Galaxy XR 대기 전환 경고를 감지해 자동으로 확인합니다.</string>
+    <string name="accessibility_service_description">어두운 환경 등에서 Galaxy XR 대기 전환(자동 종료) 경고창이 표시되면 확인 버튼을 자동으로 눌러 헤드셋이 꺼지지 않도록 유지합니다.</string>
+
+    <string name="tab_main">메인</string>
+    <string name="tab_debug">디버깅</string>
+
+    <string name="section_status">상태</string>
+    <string name="status_ready">준비됨</string>
+    <string name="status_needs_setup">설정 필요</string>
+    <string name="status_paused">일시 중지</string>
+
+    <string name="service_connected">접근성 서비스가 활성화되어 연결되었습니다.</string>
+    <string name="service_enabled_not_connected">접근성 설정은 켜져 있으나 서비스 연결을 기다리는 중입니다.</string>
+    <string name="service_disabled">Galaxy XR 경고를 감지하려면 접근성 서비스를 활성화하세요.</string>
+
+    <string name="battery_unrestricted">배터리 최적화: 제외됨 (권장)</string>
+    <string name="battery_restricted">배터리 최적화: 적용 중 (백그라운드 유지를 위해 제외 권장)</string>
+
+    <string name="notifications_enabled">알림 권한: 허용됨</string>
+    <string name="notifications_disabled">알림 권한: 적용 확인 알림을 받으려면 허용이 필요합니다</string>
+
+    <string name="boot_restore_ready">재부팅 자동 복구: 준비됨 (WRITE_SECURE_SETTINGS 허용됨)</string>
+    <string name="boot_restore_missing_perm">재부팅 자동 복구: ADB 1회 권한 부여 필요</string>
+
+    <string name="stats_summary">자동 확인 %1$d회 • 최근: %2$s</string>
+    <string name="stats_never">없음</string>
+
+    <string name="section_wireless_setup">원클릭 자동 설정 (PC 불필요)</string>
+    <string name="wireless_setup_guide">1. [개발자 옵션 열기] → 무선 디버깅 켜기 → [페어링 코드로 기기 페어링] 열기\n2. 표시된 6자리 코드를 입력하고 [원클릭 자동 설정 실행]을 누르세요. (이미 페어링했다면 코드 없이 바로 실행)</string>
+    <string name="wireless_discovery_waiting">무선 디버깅 / 페어링 서비스 자동 탐색 중…</string>
+    <string name="wireless_discovery_pairing_found">페어링 창 자동 감지됨: %1$s:%2$d (포트 자동 입력됨)</string>
+    <string name="wireless_discovery_connect_found">무선 디버깅 감지됨 (%1$s:%2$d) — 바로 실행 가능</string>
+    <string name="wireless_code_hint">6자리 페어링 코드</string>
+    <string name="wireless_port_hint">페어링 포트 (자동)</string>
+    <string name="open_dev_options">개발자 옵션 열기</string>
+    <string name="run_wireless_setup">원클릭 자동 설정 실행</string>
+    <string name="running_wireless_setup">자동 설정 진행 중…</string>
+    <string name="wireless_setup_done_banner">초기 권한 및 재부팅 자동 복구 설정이 모두 완료되었습니다.</string>
+    <string name="wireless_setup_toggle_show">무선 자동 설정 다시 열기</string>
+    <string name="wireless_setup_toggle_hide">무선 자동 설정 접기</string>
+
+    <string name="section_setup">시스템 설정 바로가기</string>
+    <string name="enable_service_now">지금 서비스 자동 활성화</string>
+    <string name="service_enabled_now_toast">접근성 서비스를 활성화했습니다.</string>
+    <string name="service_already_enabled_toast">접근성 서비스가 이미 활성화되어 있습니다.</string>
+    <string name="write_secure_missing_toast">먼저 PC에서 ADB 권한(WRITE_SECURE_SETTINGS)을 1회 부여해 주세요.</string>
+    <string name="open_accessibility_settings">접근성 설정</string>
+    <string name="open_battery_settings">배터리 최적화 설정</string>
+    <string name="open_app_info">앱 정보 (제한된 설정 허용)</string>
+    <string name="request_notification_permission">알림 권한 허용</string>
+    <string name="notification_permission_granted">알림 허용됨</string>
+    <string name="setup_hint">APK 직접 설치 시 접근성 토글이 \"제한된 설정\"으로 막히면 [앱 정보] → 우측 상단 ⋮ 메뉴 → [제한된 설정 허용] 후 다시 켜주세요.</string>
+
+    <string name="section_controls">자동화 제어</string>
+    <string name="auto_click_title">꺼짐 방지 자동 클릭</string>
+    <string name="auto_click_summary">Galaxy XR 대기 전환 카운트다운 경고를 감지하면 확인 버튼을 누릅니다.</string>
+    <string name="auto_restore_boot_title">재부팅 후 자동 복구</string>
+    <string name="auto_restore_boot_summary">기기를 재부팅해도 접근성 서비스를 자동으로 다시 켭니다 (ADB 1회 권한 필요).</string>
+    <string name="notify_on_click_title">적용 시 알림 표시</string>
+    <string name="notify_on_click_summary">경고창 자동 확인에 성공하면 상태 알림을 표시합니다.</string>
+    <string name="cooldown_title">클릭 후 재동작 대기 시간 (쿨다운)</string>
+    <string name="cooldown_15s">15초</string>
+    <string name="cooldown_60s">60초</string>
+    <string name="cooldown_120s">120초</string>
+
+    <string name="section_diagnostics">진단 도구</string>
+    <string name="verbose_logging_title">상세 진단 로그</string>
+    <string name="verbose_logging_summary">문제 해결을 위해 SystemUI 다이얼로그 구조 스냅샷과 스캔 로그를 함께 기록합니다.</string>
+    <string name="service_info_title">접근성 서비스 컴포넌트</string>
+    <string name="section_logs">최근 활동 로그</string>
+    <string name="empty_events">아직 기록된 활동이 없습니다.</string>
+    <string name="refresh">새로고침</string>
+    <string name="copy_logs">복사</string>
+    <string name="clear_logs">지우기</string>
+    <string name="logs_copied">로그를 클립보드에 복사했습니다.</string>
+    <string name="logs_cleared">활동 로그를 초기화했습니다.</string>
+    <string name="settings_open_failed">이 기기에서 해당 설정 화면을 열 수 없습니다.</string>
+
+    <string name="notification_channel_name">꺼짐 방지 상태</string>
+    <string name="notification_channel_description">GXRAwake가 대기 전환 경고를 자동 확인했을 때 알림을 표시합니다.</string>
+    <string name="notification_clicked_title">꺼짐 방지 적용됨</string>
+    <string name="notification_clicked_text">Galaxy XR 대기 전환 경고를 자동으로 확인했습니다 (%1$s).</string>
+    <string name="clicked_event">꺼짐 방지 기능을 적용했습니다.</string>
+    <string name="notification_skipped_permission">알림 권한이 없어 성공 알림을 표시하지 못했습니다.</string>
+</resources>

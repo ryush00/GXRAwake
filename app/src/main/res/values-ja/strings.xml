@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GXRAwake</string>
+    <string name="screen_title">GXRAwake</string>
+    <string name="screen_subtitle">Galaxy XR の待機移行警告を検出し、確認ボタンを自動で押してスリープを防ぎます。</string>
+
+    <string name="accessibility_service_label">GXRAwake スリープ防止</string>
+    <string name="accessibility_service_summary">Galaxy XR の待機移行警告を自動で確認します。</string>
+    <string name="accessibility_service_description">Galaxy XR の待機移行警告ダイアログを検出し、確認ボタンを押して自動終了を防ぎます。</string>
+
+    <string name="tab_main">メイン</string>
+    <string name="tab_debug">デバッグ</string>
+
+    <string name="section_status">状態</string>
+    <string name="status_ready">準備完了</string>
+    <string name="status_needs_setup">設定が必要</string>
+    <string name="status_paused">一時停止中</string>
+
+    <string name="service_connected">アクセシビリティサービスが有効で接続済みです。</string>
+    <string name="service_enabled_not_connected">アクセシビリティ設定は有効ですが、接続待機中です。</string>
+    <string name="service_disabled">Galaxy XR の警告を検出するにはアクセシビリティサービスを有効にしてください。</string>
+
+    <string name="battery_unrestricted">バッテリー最適化: 除外済み</string>
+    <string name="battery_restricted">バッテリー最適化: 制限あり（除外推奨）</string>
+
+    <string name="notifications_enabled">通知権限: 許可済み</string>
+    <string name="notifications_disabled">通知権限: 確認通知を表示するには許可が必要です</string>
+
+    <string name="boot_restore_ready">再起動後の自動復元: 準備完了 (WRITE_SECURE_SETTINGS 許可済み)</string>
+    <string name="boot_restore_missing_perm">再起動後の自動復元: ADB で 1 回の権限付与が必要</string>
+
+    <string name="stats_summary">適用回数 %1$d回 • 最終: %2$s</string>
+    <string name="stats_never">なし</string>
+
+    <string name="section_wireless_setup">ワンタップ初期設定 (PC不要)</string>
+    <string name="wireless_setup_guide">1. [開発者向けオプション] → ワイヤレスデバッグ ON → [ペア設定コードによるデバイスのペア設定] を開く\n2. 6桁のコードを入力して [ワンタップ自動設定を実行] を押してください（ペア設定済みなら空欄のまま実行可能）。</string>
+    <string name="wireless_discovery_waiting">ワイヤレスデバッグ / ペア設定サービスを自動検出中…</string>
+    <string name="wireless_discovery_pairing_found">ペア設定を検出: %1$s:%2$d（ポート自動入力済み）</string>
+    <string name="wireless_discovery_connect_found">ワイヤレスデバッグを検出 (%1$s:%2$d) — そのまま実行可能</string>
+    <string name="wireless_code_hint">6桁ペア設定コード</string>
+    <string name="wireless_port_hint">ペアポート (自動)</string>
+    <string name="open_dev_options">開発者向けオプション</string>
+    <string name="run_wireless_setup">ワンタップ自動設定を実行</string>
+    <string name="running_wireless_setup">自動設定を実行中…</string>
+    <string name="wireless_setup_done_banner">権限および再起動後の自動復元設定はすべて完了しています。</string>
+    <string name="wireless_setup_toggle_show">ワイヤレス設定を再表示</string>
+    <string name="wireless_setup_toggle_hide">ワイヤレス設定を隠す</string>
+
+    <string name="section_setup">システム設定ショートカット</string>
+    <string name="enable_service_now">今すぐサービスを有効化</string>
+    <string name="service_enabled_now_toast">アクセシビリティサービスを有効化しました。</string>
+    <string name="service_already_enabled_toast">アクセシビリティサービスはすでに有効です。</string>
+    <string name="write_secure_missing_toast">先に ADB で WRITE_SECURE_SETTINGS 権限を 1 回付与してください。</string>
+    <string name="open_accessibility_settings">アクセシビリティ設定</string>
+    <string name="open_battery_settings">バッテリー設定</string>
+    <string name="open_app_info">アプリ情報（制限付き設定）</string>
+    <string name="request_notification_permission">通知を許可</string>
+    <string name="notification_permission_granted">通知は許可済み</string>
+    <string name="setup_hint">サイドロードした APK で「制限付き設定」が表示される場合は、[アプリ情報] → 右上 ⋮ → [制限付き設定を許可] を行ってから有効にしてください。</string>
+
+    <string name="section_controls">自動化</string>
+    <string name="auto_click_title">スリープ防止の自動クリック</string>
+    <string name="auto_click_summary">Galaxy XR の待機移行警告を検出し、確認ボタンを押します。</string>
+    <string name="auto_restore_boot_title">再起動後に自動復元</string>
+    <string name="auto_restore_boot_summary">Galaxy XR 再起動後にアクセシビリティサービスを自動で再有効化します（ADB 権限が必要）。</string>
+    <string name="notify_on_click_title">適用時に通知を表示</string>
+    <string name="notify_on_click_summary">自動確認に成功したときに通知を表示します。</string>
+    <string name="cooldown_title">クリック後のクールダウン</string>
+    <string name="cooldown_15s">15秒</string>
+    <string name="cooldown_60s">60秒</string>
+    <string name="cooldown_120s">120秒</string>
+
+    <string name="section_diagnostics">診断</string>
+    <string name="verbose_logging_title">詳細ログ</string>
+    <string name="verbose_logging_summary">トラブルシューティング用に SystemUI ダイアログ構造とスキャンイベントを記録します。</string>
+    <string name="service_info_title">サービスコンポーネント</string>
+    <string name="section_logs">最近の動作</string>
+    <string name="empty_events">まだ動作はありません。</string>
+    <string name="refresh">更新</string>
+    <string name="copy_logs">コピー</string>
+    <string name="clear_logs">消去</string>
+    <string name="logs_copied">ログをクリップボードにコピーしました。</string>
+    <string name="logs_cleared">ログを消去しました。</string>
+    <string name="settings_open_failed">この端末では設定画面を開けませんでした。</string>
+
+    <string name="notification_channel_name">スリープ防止状態</string>
+    <string name="notification_channel_description">GXRAwake が待機移行警告を確認したときに通知します。</string>
+    <string name="notification_clicked_title">スリープ防止を適用しました</string>
+    <string name="notification_clicked_text">Galaxy XR の待機移行警告を自動で確認しました（%1$s）。</string>
+    <string name="clicked_event">スリープ防止を適用しました。</string>
+    <string name="notification_skipped_permission">通知権限がないため、成功通知を表示できませんでした。</string>
+</resources>

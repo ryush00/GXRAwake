@@ -1,0 +1,179 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag name (e.g. v0.1.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="$INPUT_TAG"
+          else
+            TAG="$REF_NAME"
+          fi
+
+          VERSION="${TAG#v}"
+          BASE_VERSION="${VERSION%%-*}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-1}
+          PATCH=${PATCH:-0}
+
+          if [[ "$MAJOR" =~ ^[0-9]+$ && "$MINOR" =~ ^[0-9]+$ && "$PATCH" =~ ^[0-9]+$ ]]; then
+            VERSION_CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          else
+            VERSION_CODE=1
+          fi
+          if [ "$VERSION_CODE" -lt 1 ]; then
+            VERSION_CODE=1
+          fi
+
+          IS_PRERELEASE="false"
+          if [[ "$VERSION" == *-* ]]; then
+            IS_PRERELEASE="true"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Ensure Android SDK licenses
+        run: |
+          if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          fi
+
+      - name: Decode release keystore (if secrets configured)
+        id: signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$KEYSTORE_PASS" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASS" ]; then
+            KEYSTORE_PATH="$RUNNER_TEMP/gxrawake-release.jks"
+            printf '%s' "$KEYSTORE_B64" | base64 --decode > "$KEYSTORE_PATH"
+            echo "keystore_path=$KEYSTORE_PATH" >> "$GITHUB_OUTPUT"
+            echo "release_signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Release signing secrets are not configured; signing APK with runner debug key."
+            echo "release_signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run unit tests & assemble Release APK
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ steps.signing.outputs.keystore_path }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          ./gradlew testDebugUnitTest assembleRelease \
+            -PversionName="${{ steps.meta.outputs.version_name }}" \
+            -PversionCode="${{ steps.meta.outputs.version_code }}" \
+            --stacktrace
+
+      - name: Prepare release assets
+        id: assets
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          RELEASE_SIGNED: ${{ steps.signing.outputs.release_signed }}
+        run: |
+          mkdir -p release-assets
+          if [ "$RELEASE_SIGNED" = "true" ]; then
+            APK_NAME="GXRAwake-${TAG}.apk"
+          else
+            APK_NAME="GXRAwake-${TAG}-debug-signed.apk"
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "release-assets/${APK_NAME}"
+          (cd release-assets && sha256sum "${APK_NAME}" > SHA256SUMS.txt)
+          echo "apk_name=$APK_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Release APK workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GXRAwake-${{ steps.meta.outputs.tag }}
+          path: release-assets/
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          APK_NAME: ${{ steps.assets.outputs.apk_name }}
+          RELEASE_SIGNED: ${{ steps.signing.outputs.release_signed }}
+          INPUT_PRERELEASE: ${{ inputs.prerelease }}
+          AUTO_PRERELEASE: ${{ steps.meta.outputs.is_prerelease }}
+          EVENT_NAME: ${{ github.event_name }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          EXTRA_ARGS=()
+          if [ "$INPUT_PRERELEASE" = "true" ] || [ "$AUTO_PRERELEASE" = "true" ]; then
+            EXTRA_ARGS+=(--prerelease)
+          fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            EXTRA_ARGS+=(--target "$TARGET_SHA")
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              "release-assets/${APK_NAME}" \
+              "release-assets/SHA256SUMS.txt" \
+              --clobber
+          else
+            NOTE_SUFFIX=""
+            if [ "$RELEASE_SIGNED" != "true" ]; then
+              NOTE_SUFFIX=$'\n\n> ⚠️ Signed with an ephemeral debug key because release signing secrets (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) are not configured yet.'
+            fi
+            gh release create "$TAG" \
+              "release-assets/${APK_NAME}" \
+              "release-assets/SHA256SUMS.txt" \
+              --title "GXRAwake ${TAG}" \
+              --generate-notes \
+              "${EXTRA_ARGS[@]}"
+            if [ -n "$NOTE_SUFFIX" ]; then
+              CURRENT_BODY=$(gh release view "$TAG" --json body -q .body)
+              gh release edit "$TAG" --notes "${CURRENT_BODY}${NOTE_SUFFIX}"
+            fi
+          fi

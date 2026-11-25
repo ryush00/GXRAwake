@@ -29,11 +29,14 @@
     <string name="boot_restore_ready">재부팅 자동 복구: 준비됨 (WRITE_SECURE_SETTINGS 허용됨)</string>
     <string name="boot_restore_missing_perm">재부팅 자동 복구: ADB 1회 권한 부여 필요</string>
 
+    <string name="eyes_monitor_blocked">경고창 근본 차단: 활성 (재부팅 전까지 경고창 미표시)</string>
+    <string name="eyes_monitor_not_blocked">경고창 근본 차단: 비활성 (자동 클릭 안전망으로 동작 중)</string>
+
     <string name="stats_summary">자동 확인 %1$d회 • 최근: %2$s</string>
     <string name="stats_never">없음</string>
 
     <string name="section_wireless_setup">원클릭 자동 설정 (PC 불필요)</string>
-    <string name="wireless_setup_guide">1. [개발자 옵션 열기] → 무선 디버깅 켜기 → [페어링 코드로 기기 페어링] 열기\n2. 표시된 6자리 코드를 입력하고 [원클릭 자동 설정 실행]을 누르세요. (이미 페어링했다면 코드 없이 바로 실행)</string>
+    <string name="wireless_setup_guide">1. [개발자 옵션 열기] → 무선 디버깅 켜기 → [페어링 코드로 기기 페어링] 열기\n2. 표시된 6자리 코드를 입력하고 [원클릭 자동 설정 실행]을 누르면 권한·배터리 제외·접근성 활성화와 경고창 근본 차단(EyesMonitor 끄기)까지 한 번에 적용됩니다. (이미 페어링했다면 코드 없이 바로 실행)</string>
     <string name="wireless_discovery_waiting">무선 디버깅 / 페어링 서비스 자동 탐색 중…</string>
     <string name="wireless_discovery_pairing_found">페어링 창 자동 감지됨: %1$s:%2$d (포트 자동 입력됨)</string>
     <string name="wireless_discovery_connect_found">무선 디버깅 감지됨 (%1$s:%2$d) — 바로 실행 가능</string>
@@ -42,7 +45,9 @@
     <string name="open_dev_options">개발자 옵션 열기</string>
     <string name="run_wireless_setup">원클릭 자동 설정 실행</string>
     <string name="running_wireless_setup">자동 설정 진행 중…</string>
-    <string name="wireless_setup_done_banner">초기 권한 및 재부팅 자동 복구 설정이 모두 완료되었습니다.</string>
+    <string name="restore_eyes_monitor_default">경고창 근본 차단 해제 (기본값 복원)</string>
+    <string name="wireless_setup_done_banner">초기 권한, 재부팅 자동 복구 및 경고창 근본 차단이 모두 적용되었습니다.</string>
+    <string name="wireless_setup_done_banner_prop_inactive">재부팅 자동 복구 준비됨 — 재부팅 후 경고창 근본 차단까지 다시 켜려면 무선 설정을 열어 실행하세요.</string>
     <string name="wireless_setup_toggle_show">무선 자동 설정 다시 열기</string>
     <string name="wireless_setup_toggle_hide">무선 자동 설정 접기</string>
 

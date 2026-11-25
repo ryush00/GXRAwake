@@ -29,11 +29,14 @@
     <string name="boot_restore_ready">Reboot auto-restore: Ready (WRITE_SECURE_SETTINGS granted)</string>
     <string name="boot_restore_missing_perm">Reboot auto-restore: Needs one-time ADB permission grant</string>
 
+    <string name="eyes_monitor_blocked">Warning suppression: Active (dialog disabled until reboot)</string>
+    <string name="eyes_monitor_not_blocked">Warning suppression: Inactive (protected by auto-click fallback)</string>
+
     <string name="stats_summary">Applied %1$d times • Last: %2$s</string>
     <string name="stats_never">Never</string>
 
     <string name="section_wireless_setup">One-tap Setup (No PC needed)</string>
-    <string name="wireless_setup_guide">1. Tap Open Developer Options → enable Wireless debugging → open Pair device with pairing code.\n2. Enter the 6-digit code below and tap Run One-tap Setup. (Leave code blank if already paired.)</string>
+    <string name="wireless_setup_guide">1. Tap Developer options → enable Wireless debugging → open Pair device with pairing code.\n2. Enter the 6-digit code and tap Run one-tap setup to grant permissions, exempt battery, enable Accessibility, and suppress the EyesMonitor warning dialog directly. (Leave code blank if already paired.)</string>
     <string name="wireless_discovery_waiting">Waiting for Wireless debugging / pairing service…</string>
     <string name="wireless_discovery_pairing_found">Pairing detected: %1$s:%2$d (port auto-filled)</string>
     <string name="wireless_discovery_connect_found">Wireless debugging detected (%1$s:%2$d) — ready to connect</string>
@@ -42,7 +45,9 @@
     <string name="open_dev_options">Developer options</string>
     <string name="run_wireless_setup">Run one-tap setup</string>
     <string name="running_wireless_setup">Running setup…</string>
-    <string name="wireless_setup_done_banner">All permissions &amp; boot auto-restore are configured.</string>
+    <string name="restore_eyes_monitor_default">Restore default warning (re-enable EyesMonitor)</string>
+    <string name="wireless_setup_done_banner">All permissions, boot auto-restore, and warning suppression are active.</string>
+    <string name="wireless_setup_done_banner_prop_inactive">Boot auto-restore ready — reopen wireless setup to re-apply root-cause warning suppression after reboot.</string>
     <string name="wireless_setup_toggle_show">Show wireless setup</string>
     <string name="wireless_setup_toggle_hide">Hide wireless setup</string>
 

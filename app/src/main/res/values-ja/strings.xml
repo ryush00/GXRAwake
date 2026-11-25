@@ -29,11 +29,14 @@
     <string name="boot_restore_ready">再起動後の自動復元: 準備完了 (WRITE_SECURE_SETTINGS 許可済み)</string>
     <string name="boot_restore_missing_perm">再起動後の自動復元: ADB で 1 回の権限付与が必要</string>
 
+    <string name="eyes_monitor_blocked">警告ダイアログ根本遮断: 有効（再起動まで非表示）</string>
+    <string name="eyes_monitor_not_blocked">警告ダイアログ根本遮断: 無効（自動クリック保護で動作中）</string>
+
     <string name="stats_summary">適用回数 %1$d回 • 最終: %2$s</string>
     <string name="stats_never">なし</string>
 
     <string name="section_wireless_setup">ワンタップ初期設定 (PC不要)</string>
-    <string name="wireless_setup_guide">1. [開発者向けオプション] → ワイヤレスデバッグ ON → [ペア設定コードによるデバイスのペア設定] を開く\n2. 6桁のコードを入力して [ワンタップ自動設定を実行] を押してください（ペア設定済みなら空欄のまま実行可能）。</string>
+    <string name="wireless_setup_guide">1. [開発者向けオプション] → ワイヤレスデバッグ ON → [ペア設定コードによるデバイスのペア設定] を開く\n2. 6桁のコードを入力して [ワンタップ自動設定を実行] を押すと、権限付与・バッテリー除外・アクセシビリティ有効化と警告ダイアログ根本遮断（EyesMonitor 無効化）をまとめて適用します（ペア設定済みなら空欄のまま実行可能）。</string>
     <string name="wireless_discovery_waiting">ワイヤレスデバッグ / ペア設定サービスを自動検出中…</string>
     <string name="wireless_discovery_pairing_found">ペア設定を検出: %1$s:%2$d（ポート自動入力済み）</string>
     <string name="wireless_discovery_connect_found">ワイヤレスデバッグを検出 (%1$s:%2$d) — そのまま実行可能</string>
@@ -42,7 +45,9 @@
     <string name="open_dev_options">開発者向けオプション</string>
     <string name="run_wireless_setup">ワンタップ自動設定を実行</string>
     <string name="running_wireless_setup">自動設定を実行中…</string>
-    <string name="wireless_setup_done_banner">権限および再起動後の自動復元設定はすべて完了しています。</string>
+    <string name="restore_eyes_monitor_default">根本遮断を解除（デフォルトへ復元）</string>
+    <string name="wireless_setup_done_banner">権限・再起動後の自動復元・警告ダイアログ根本遮断がすべて有効です。</string>
+    <string name="wireless_setup_done_banner_prop_inactive">再起動後の自動復元は準備完了 — 再起動後に警告ダイアログ根本遮断を再度適用するにはワイヤレス設定を開いて実行してください。</string>
     <string name="wireless_setup_toggle_show">ワイヤレス設定を再表示</string>
     <string name="wireless_setup_toggle_hide">ワイヤレス設定を隠す</string>
 

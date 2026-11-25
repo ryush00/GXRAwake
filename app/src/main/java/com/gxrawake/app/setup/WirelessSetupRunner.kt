@@ -16,7 +16,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Discovers local Wireless Debugging pairing/connect ports via Android mDNS
- * and executes the one-time GXRAwake setup commands directly on-device.
+ * and executes the one-tap GXRAwake setup commands directly on-device:
+ * 1. `pm grant <pkg> android.permission.WRITE_SECURE_SETTINGS`
+ * 2. `dumpsys deviceidle whitelist +<pkg>`
+ * 3. `setprop debug.ix.sysui.eyes_monitor.enabled false` (root-cause dialog suppression)
+ * 4. Enable `KeepAwakeAccessibilityService` (reboot-persistent safety net)
  */
 class WirelessSetupRunner(
     context: Context,
@@ -77,55 +81,23 @@ class WirelessSetupRunner(
         executor.execute {
             val manager = LocalAdbConnectionManager.getInstance(appContext)
             try {
-                // Step 1: Pair if a 6-digit pairing code was provided
-                if (code.isNotEmpty()) {
-                    val pairingEp = discoveredPairing
-                    val pairHost = pairingEp?.host ?: "127.0.0.1"
-                    val pairPort = explicitPort ?: pairingEp?.port ?: -1
-                    if (pairPort !in 1..65535) {
-                        finish(
-                            false,
-                            "페어링 포트를 찾을 수 없습니다. '페어링 코드로 기기 페어링' 창을 열어두거나 포트를 직접 입력해 주세요."
-                        )
-                        return@execute
-                    }
-
-                    postProgress("무선 디버깅 페어링 중... ($pairHost:$pairPort)")
-                    EventLogStore.append(appContext, "Wireless ADB pairing started ($pairHost:$pairPort).")
-                    val paired = manager.pair(pairHost, pairPort, code)
-                    if (!paired) {
-                        finish(false, "페어링에 실패했습니다. 6자리 페어링 코드와 포트를 다시 확인해 주세요.")
-                        return@execute
-                    }
-                    EventLogStore.append(appContext, "Wireless ADB pairing succeeded.")
-                    // Give adbd a short moment to expose the connect endpoint after pairing
-                    Thread.sleep(600L)
-                }
-
-                // Step 2: Connect to wireless ADB daemon
-                postProgress("로컬 무선 ADB 연결 중...")
-                val connected = connectToLocalAdb(manager)
-                if (!connected) {
-                    finish(
-                        false,
-                        "무선 디버깅에 연결할 수 없습니다. 개발자 옵션에서 '무선 디버깅'이 켜져 있는지 확인해 주세요."
-                    )
+                if (!pairAndConnect(manager, code, explicitPort)) {
                     return@execute
                 }
-                EventLogStore.append(appContext, "Wireless ADB connected.")
 
-                // Step 3: Execute one-time setup commands via ADB shell
-                postProgress("권한 부여 및 배터리 최적화 제외 적용 중...")
+                // Execute setup commands + root-cause EyesMonitor suppression via ADB shell
+                postProgress("권한 부여, 배터리 최적화 제외 및 경고창 근본 차단 적용 중...")
                 val pkg = appContext.packageName
-                val setupCmd = "pm grant $pkg android.permission.WRITE_SECURE_SETTINGS; " +
-                    "dumpsys deviceidle whitelist +$pkg"
+                val setupCmd = EyesMonitorPropManager.buildOneTapShellCommand(pkg)
                 val shellOutput = runShellCommand(manager, setupCmd)
+                val eyesMonitorBlocked = EyesMonitorPropManager.isBlockedNow()
                 EventLogStore.append(
                     appContext,
-                    "Wireless setup shell finished: ${shellOutput.ifBlank { "OK" }}"
+                    "Wireless setup shell finished (eyesMonitorBlocked=$eyesMonitorBlocked): " +
+                        shellOutput.ifBlank { "OK" }
                 )
 
-                // Step 4: Enable AccessibilityService via the newly granted WRITE_SECURE_SETTINGS
+                // Enable AccessibilityService via the newly granted WRITE_SECURE_SETTINGS
                 postProgress("접근성 서비스 활성화 및 상태 확인 중...")
                 val restoreResult = AccessibilityStateManager.ensureServiceEnabled(
                     appContext,
@@ -138,10 +110,15 @@ class WirelessSetupRunner(
                     ?.isIgnoringBatteryOptimizations(pkg) == true
 
                 if (hasSecurePerm && serviceEnabled) {
-                    val detail = if (batteryOk) {
-                        "설정 완료! 재부팅 후에도 자동으로 복구됩니다."
-                    } else {
-                        "권한 및 접근성 활성화 완료! (배터리 최적화 제외는 필요 시 설정에서 확인해 주세요.)"
+                    val detail = when {
+                        eyesMonitorBlocked && batteryOk ->
+                            "설정 완료! 경고창 근본 차단이 적용되었으며, 재부팅 후에도 접근성 서비스가 자동 복구됩니다."
+                        eyesMonitorBlocked ->
+                            "권한·접근성 및 경고창 근본 차단 완료! (배터리 최적화 제외는 필요 시 설정에서 확인해 주세요.)"
+                        batteryOk ->
+                            "설정 완료! 재부팅 후에도 자동 복구됩니다. (이 기기에서는 setprop 근본 차단이 제한되어 자동 클릭으로 동작합니다.)"
+                        else ->
+                            "권한 및 접근성 활성화 완료! (배터리 최적화 제외는 필요 시 설정에서 확인해 주세요.)"
                     }
                     finish(true, detail)
                 } else {
@@ -154,19 +131,106 @@ class WirelessSetupRunner(
                 EventLogStore.append(appContext, "Wireless setup requires pairing: ${e.message}")
                 finish(false, "페어링이 필요합니다. '페어링 코드로 기기 페어링'의 6자리 코드를 입력해 주세요.")
             } catch (e: Exception) {
-                val rawMsg = e.message ?: e.javaClass.simpleName
-                EventLogStore.append(appContext, "Wireless setup error: $rawMsg")
-                val userMsg = if (rawMsg.contains("Could not exchange peer info", ignoreCase = true)) {
-                    "페어링 코드가 일치하지 않습니다. 6자리 코드를 다시 확인해 주세요."
-                } else {
-                    "자동 설정 실패: $rawMsg"
-                }
-                finish(false, userMsg)
+                handleSetupException(e)
             } finally {
                 runCatching { manager.disconnect() }
                 running.set(false)
             }
         }
+    }
+
+    /**
+     * Restores Galaxy XR's default EyesMonitor behavior (`debug.ix.sysui.eyes_monitor.enabled=true`)
+     * via local Wireless Debugging without needing to reboot.
+     */
+    fun restoreDefaultEyesMonitor(pairingCodeInput: String, pairingPortInput: String) {
+        if (!running.compareAndSet(false, true)) return
+
+        val code = pairingCodeInput.trim()
+        val explicitPort = pairingPortInput.trim().toIntOrNull()
+
+        executor.execute {
+            val manager = LocalAdbConnectionManager.getInstance(appContext)
+            try {
+                if (!pairAndConnect(manager, code, explicitPort)) {
+                    return@execute
+                }
+
+                postProgress("경고창 근본 차단 해제(기본값 복원) 적용 중...")
+                val cmd = EyesMonitorPropManager.buildSetEnabledCommand(enabled = true)
+                val shellOutput = runShellCommand(manager, cmd)
+                val stillBlocked = EyesMonitorPropManager.isBlockedNow()
+                EventLogStore.append(
+                    appContext,
+                    "EyesMonitor prop restored (stillBlocked=$stillBlocked): ${shellOutput.ifBlank { "OK" }}"
+                )
+                if (!stillBlocked) {
+                    finish(true, "경고창 근본 차단을 해제했습니다. (접근성 자동 클릭 안전망은 그대로 유지됩니다.)")
+                } else {
+                    finish(false, "기본값 복원에 실패했습니다. 재부팅하면 기본값으로 돌아갑니다.")
+                }
+            } catch (e: AdbPairingRequiredException) {
+                EventLogStore.append(appContext, "Wireless ADB requires pairing: ${e.message}")
+                finish(false, "페어링이 필요합니다. '페어링 코드로 기기 페어링'의 6자리 코드를 입력해 주세요.")
+            } catch (e: Exception) {
+                handleSetupException(e)
+            } finally {
+                runCatching { manager.disconnect() }
+                running.set(false)
+            }
+        }
+    }
+
+    private fun pairAndConnect(
+        manager: LocalAdbConnectionManager,
+        code: String,
+        explicitPort: Int?
+    ): Boolean {
+        if (code.isNotEmpty()) {
+            val pairingEp = discoveredPairing
+            val pairHost = pairingEp?.host ?: "127.0.0.1"
+            val pairPort = explicitPort ?: pairingEp?.port ?: -1
+            if (pairPort !in 1..65535) {
+                finish(
+                    false,
+                    "페어링 포트를 찾을 수 없습니다. '페어링 코드로 기기 페어링' 창을 열어두거나 포트를 직접 입력해 주세요."
+                )
+                return false
+            }
+
+            postProgress("무선 디버깅 페어링 중... ($pairHost:$pairPort)")
+            EventLogStore.append(appContext, "Wireless ADB pairing started ($pairHost:$pairPort).")
+            val paired = manager.pair(pairHost, pairPort, code)
+            if (!paired) {
+                finish(false, "페어링에 실패했습니다. 6자리 페어링 코드와 포트를 다시 확인해 주세요.")
+                return false
+            }
+            EventLogStore.append(appContext, "Wireless ADB pairing succeeded.")
+            Thread.sleep(600L)
+        }
+
+        postProgress("로컬 무선 ADB 연결 중...")
+        val connected = connectToLocalAdb(manager)
+        if (!connected) {
+            finish(
+                false,
+                "무선 디버깅에 연결할 수 없습니다. 개발자 옵션에서 '무선 디버깅'이 켜져 있는지 확인해 주세요."
+            )
+            return false
+        }
+        EventLogStore.append(appContext, "Wireless ADB connected.")
+        return true
+    }
+
+    private fun handleSetupException(e: Exception) {
+        val rawMsg = e.message ?: e.javaClass.simpleName
+        EventLogStore.append(appContext, "Wireless setup error: $rawMsg")
+        val userMsg = if (rawMsg.contains("Could not exchange peer info", ignoreCase = true)) {
+            "페어링 코드가 일치하지 않습니다. 6자리 코드를 다시 확인해 주세요."
+        } else {
+            "자동 설정 실패: $rawMsg"
+        }
+        finish(false, userMsg)
     }
 
     private fun connectToLocalAdb(manager: LocalAdbConnectionManager): Boolean {

@@ -34,8 +34,8 @@ android {
         applicationId = "com.gxrawake.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = propVersionCode ?: 1
-        versionName = propVersionName ?: "0.1.0"
+        versionCode = propVersionCode ?: 2
+        versionName = propVersionName ?: "0.2.0"
     }
 
     signingConfigs {

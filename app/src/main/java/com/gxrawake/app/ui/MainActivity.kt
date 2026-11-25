@@ -33,10 +33,12 @@ import com.gxrawake.app.log.EventLogStore
 import com.gxrawake.app.notification.AwakeNotifier
 import com.gxrawake.app.service.AccessibilityStateManager
 import com.gxrawake.app.service.KeepAwakeAccessibilityService
+import com.gxrawake.app.setup.EyesMonitorPropManager
 import com.gxrawake.app.setup.WirelessSetupRunner
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executors
 
 class MainActivity : Activity() {
 
@@ -52,6 +54,7 @@ class MainActivity : Activity() {
     private lateinit var statusBadgeView: TextView
     private lateinit var serviceStatusView: TextView
     private lateinit var bootRestoreStatusView: TextView
+    private lateinit var eyesMonitorStatusView: TextView
     private lateinit var batteryStatusView: TextView
     private lateinit var notificationStatusView: TextView
     private lateinit var statsSummaryView: TextView
@@ -75,12 +78,15 @@ class MainActivity : Activity() {
     private lateinit var pairingCodeInput: EditText
     private lateinit var pairingPortInput: EditText
     private lateinit var runWirelessSetupButton: Button
+    private lateinit var restoreEyesMonitorButton: Button
     private lateinit var wirelessProgressView: TextView
     private var wirelessPanelForcedOpen = false
+    private var eyesMonitorBlocked = false
     private var lastAutoFilledPairingPort: String? = null
     private var discoveryActive = false
     private var showingDebugTab = false
     private lateinit var wirelessSetupRunner: WirelessSetupRunner
+    private val propCheckExecutor = Executors.newSingleThreadExecutor()
 
     private val configPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
         runOnUiThread { refreshUi() }
@@ -113,6 +119,7 @@ class MainActivity : Activity() {
                 override fun onFinished(success: Boolean, message: String) {
                     runWirelessSetupButton.isEnabled = true
                     runWirelessSetupButton.text = getString(R.string.run_wireless_setup)
+                    restoreEyesMonitorButton.isEnabled = true
                     wirelessProgressView.visibility = View.VISIBLE
                     wirelessProgressView.setTextColor(
                         getColor(if (success) R.color.status_ready else R.color.status_error)
@@ -122,6 +129,7 @@ class MainActivity : Activity() {
                         pairingCodeInput.setText("")
                         wirelessPanelForcedOpen = false
                     }
+                    refreshEyesMonitorStatusAsync()
                     refreshUi()
                 }
             }
@@ -129,6 +137,7 @@ class MainActivity : Activity() {
         setContentView(buildRootView())
         selectTab(showDebug = false)
         refreshUi()
+        refreshEyesMonitorStatusAsync()
     }
 
     override fun onStart() {
@@ -141,6 +150,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         refreshUi()
+        refreshEyesMonitorStatusAsync()
     }
 
     override fun onStop() {
@@ -148,6 +158,11 @@ class MainActivity : Activity() {
         KeepAwakeConfig.prefs(this).unregisterOnSharedPreferenceChangeListener(configPrefsListener)
         EventLogStore.prefs(this).unregisterOnSharedPreferenceChangeListener(logPrefsListener)
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        propCheckExecutor.shutdownNow()
+        super.onDestroy()
     }
 
     override fun onRequestPermissionsResult(
@@ -259,6 +274,7 @@ class MainActivity : Activity() {
 
         serviceStatusView = bodyText().apply { setPadding(0, 0, 0, dp(6)) }
         bootRestoreStatusView = bodyText().apply { setPadding(0, 0, 0, dp(6)) }
+        eyesMonitorStatusView = bodyText().apply { setPadding(0, 0, 0, dp(6)) }
         batteryStatusView = bodyText().apply { setPadding(0, 0, 0, dp(6)) }
         notificationStatusView = bodyText().apply { setPadding(0, 0, 0, dp(10)) }
         statsSummaryView = TextView(this).apply {
@@ -269,6 +285,7 @@ class MainActivity : Activity() {
 
         card.addView(serviceStatusView)
         card.addView(bootRestoreStatusView)
+        card.addView(eyesMonitorStatusView)
         card.addView(batteryStatusView)
         card.addView(notificationStatusView)
         card.addView(statsSummaryView)
@@ -347,6 +364,7 @@ class MainActivity : Activity() {
         ) {
             if (wirelessSetupRunner.isRunning()) return@createActionButton
             runWirelessSetupButton.isEnabled = false
+            restoreEyesMonitorButton.isEnabled = false
             runWirelessSetupButton.text = getString(R.string.running_wireless_setup)
             wirelessSetupRunner.runOneTapSetup(
                 pairingCodeInput = pairingCodeInput.text?.toString().orEmpty(),
@@ -356,6 +374,20 @@ class MainActivity : Activity() {
         btnRow.addView(devOptsBtn, weightParams(endMargin = dp(8)))
         btnRow.addView(runWirelessSetupButton, weightParams())
         wirelessBodyLayout.addView(btnRow)
+
+        restoreEyesMonitorButton = createChipButton(getString(R.string.restore_eyes_monitor_default)) {
+            if (wirelessSetupRunner.isRunning()) return@createChipButton
+            runWirelessSetupButton.isEnabled = false
+            restoreEyesMonitorButton.isEnabled = false
+            wirelessSetupRunner.restoreDefaultEyesMonitor(
+                pairingCodeInput = pairingCodeInput.text?.toString().orEmpty(),
+                pairingPortInput = pairingPortInput.text?.toString().orEmpty()
+            )
+        }.apply {
+            visibility = View.GONE
+            layoutParams = matchWrap().apply { topMargin = dp(8) }
+        }
+        wirelessBodyLayout.addView(restoreEyesMonitorButton)
 
         wirelessProgressView = TextView(this).apply {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
@@ -644,6 +676,13 @@ class MainActivity : Activity() {
         val ignoringBattery = isIgnoringBatteryOptimizations()
         val allConfigured = hasSecurePerm && enabledInSettings && ignoringBattery
         wirelessDoneBanner.visibility = if (allConfigured) View.VISIBLE else View.GONE
+        wirelessDoneBanner.text = getString(
+            if (eyesMonitorBlocked) R.string.wireless_setup_done_banner
+            else R.string.wireless_setup_done_banner_prop_inactive
+        )
+        wirelessDoneBanner.setTextColor(
+            getColor(if (eyesMonitorBlocked) R.color.status_ready else R.color.text_secondary)
+        )
         wirelessToggleButton.visibility = if (allConfigured) View.VISIBLE else View.GONE
         wirelessToggleButton.text = getString(
             if (wirelessPanelForcedOpen) R.string.wireless_setup_toggle_hide
@@ -655,7 +694,10 @@ class MainActivity : Activity() {
             } else {
                 View.GONE
             }
+        restoreEyesMonitorButton.visibility = if (eyesMonitorBlocked) View.VISIBLE else View.GONE
         syncWirelessDiscovery(shouldDiscover = wirelessBodyLayout.visibility == View.VISIBLE)
+
+        applyEyesMonitorStatusUi()
 
         batteryStatusView.text = if (ignoringBattery) {
             getString(R.string.battery_unrestricted)
@@ -716,6 +758,33 @@ class MainActivity : Activity() {
         if (showingDebugTab) {
             refreshLogsOnly()
         }
+    }
+
+    private fun refreshEyesMonitorStatusAsync() {
+        runCatching {
+            propCheckExecutor.execute {
+                val blocked = EyesMonitorPropManager.isBlockedNow()
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    val changed = eyesMonitorBlocked != blocked
+                    eyesMonitorBlocked = blocked
+                    applyEyesMonitorStatusUi()
+                    if (changed) {
+                        refreshUi()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun applyEyesMonitorStatusUi() {
+        eyesMonitorStatusView.text = getString(
+            if (eyesMonitorBlocked) R.string.eyes_monitor_blocked
+            else R.string.eyes_monitor_not_blocked
+        )
+        eyesMonitorStatusView.setTextColor(
+            getColor(if (eyesMonitorBlocked) R.color.status_ready else R.color.text_secondary)
+        )
     }
 
     private fun refreshLogsOnly() {

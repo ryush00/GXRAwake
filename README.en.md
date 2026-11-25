@@ -26,6 +26,9 @@ Even with Developer Options **Stay awake** enabled and long screen-off timeouts 
 
 ## Key Features
 
+- **Two-Layer Hybrid Sleep Prevention**
+  - **Layer 1 — Root-Cause Suppression**: One-tap Wireless Debugging setup also runs `setprop debug.ix.sysui.eyes_monitor.enabled false`, preventing the 60s warning dialog and 90s auto-sleep timer from triggering at all until reboot (zero impact on eye tracking or sensors)
+  - **Layer 2 — Reboot-Persistent Safety Net**: Even after a reboot clears `debug.*`, `GXRAwake` automatically restores its AccessibilityService via `WRITE_SECURE_SETTINGS` + `AlarmManager.setAndAllowWhileIdle` and dismisses the dialog within ~0.2s
 - **Low-Overhead Event-Driven Detection**
   - Scoped to `com.android.systemui` at the OS level and runs all scanning on a dedicated background `HandlerThread` (`GXRAwakeScanner`) to eliminate UI jank
   - Drops `flagIncludeNotImportantViews` to minimize system-wide accessibility tree overhead, and runs backup polling only while the screen is interactive at a 5-second interval on `rootInActiveWindow` and `TYPE_SYSTEM` windows—pausing automatically on screen-off and never querying foreground VR/2D apps
@@ -59,9 +62,10 @@ Because of Galaxy XR's `SecSettings` firmware restriction, a **one-time** permis
 2. Enable **Developer Options** once: Settings → About device → Software information → tap **Build number 7 times**.
 3. Inside `GXRAwake`, tap **[Developer options]** in the **[One-tap Setup]** card so Settings opens beside the app in spatial multi-window.
 4. Enable **Wireless debugging**, open it, and tap **[Pair device with pairing code]**. The pairing port is discovered and filled automatically via mDNS.
-5. Enter only the **6-digit pairing code** shown in Settings and tap **[Run one-tap setup]** to complete all three steps automatically:
+5. Enter only the **6-digit pairing code** shown in Settings and tap **[Run one-tap setup]** to complete all four steps automatically:
    - Grant `WRITE_SECURE_SETTINGS`
    - Exempt `com.gxrawake.app` from battery optimization
+   - Suppress the EyesMonitor warning dialog directly (`setprop debug.ix.sysui.eyes_monitor.enabled false`)
    - Enable and bind `KeepAwakeAccessibilityService`
 
 ### Option 2. PC / Mac USB Setup
@@ -78,7 +82,10 @@ adb shell pm grant com.gxrawake.app android.permission.WRITE_SECURE_SETTINGS
 # 3. Exempt from battery optimization for overnight VR Sleep (persists across reboots)
 adb shell dumpsys deviceidle whitelist +com.gxrawake.app
 
-# 4. Enable AccessibilityService
+# 4. Suppress the 60s warning dialog / 90s auto-sleep directly (active until reboot)
+adb shell setprop debug.ix.sysui.eyes_monitor.enabled false
+
+# 5. Enable AccessibilityService (reboot-persistent safety net)
 adb shell settings put secure enabled_accessibility_services com.gxrawake.app/com.gxrawake.app.service.KeepAwakeAccessibilityService
 adb shell settings put secure accessibility_enabled 1
 ```
@@ -145,6 +152,7 @@ app/src/
 │   │   │   ├── KeepAwakeAccessibilityService.kt
 │   │   │   └── RestoreAlarmReceiver.kt
 │   │   ├── setup/
+│   │   │   ├── EyesMonitorPropManager.kt
 │   │   │   ├── LocalAdbConnectionManager.kt
 │   │   │   ├── SelfSignedCertGenerator.kt
 │   │   │   └── WirelessSetupRunner.kt
@@ -159,7 +167,9 @@ app/src/
 └── test/java/com/gxrawake/app/
     ├── matcher/DialogMatcherTest.kt
     ├── service/AccessibilityStateManagerTest.kt
-    └── setup/SelfSignedCertGeneratorTest.kt
+    └── setup/
+        ├── EyesMonitorPropManagerTest.kt
+        └── SelfSignedCertGeneratorTest.kt
 ```
 
 ---
@@ -173,7 +183,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@21
 ./gradlew testDebugUnitTest assembleDebug
 ```
 
-- Unit tests: `DialogMatcherTest` (19) + `AccessibilityStateManagerTest` (4) + `SelfSignedCertGeneratorTest` (2) — 25 tests total
+- Unit tests: `DialogMatcherTest` (19) + `AccessibilityStateManagerTest` (4) + `EyesMonitorPropManagerTest` (3) + `SelfSignedCertGeneratorTest` (2) — 28 tests total
 - Output APK: `app/build/outputs/apk/debug/app-debug.apk`
 
 ---

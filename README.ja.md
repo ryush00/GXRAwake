@@ -26,6 +26,9 @@ Galaxy XR（`SM-I610`）では、開発者向けオプションの「スリー�
 
 ## 主な機能
 
+- **2重ハイブリッドスリープ防止**
+  - **1次 根本遮断**: ワンタップワイヤレス設定の実行時に `setprop debug.ix.sysui.eyes_monitor.enabled false` を同時適用し、**再起動するまで警告ダイアログ自体を一切表示しない**（アイトラッキング・各種センサーへの影響なし）
+  - **2次 再起動セーフティネット**: 再起動により `debug.*` プロパティが初期化されても、`WRITE_SECURE_SETTINGS` + `AlarmManager.setAndAllowWhileIdle` によりアクセシビリティサービスが自動復元され、警告ダイアログを 0.2 秒で自動確認
 - **低負荷・イベント駆動の警告検出**
   - `com.android.systemui` 専用パッケージフィルタと専用バックグラウンドスレッド `GXRAwakeScanner` でイベント発生時に即座にスキャン
   - `flagIncludeNotImportantViews` を無効化してシステム全体のアクセシビリティツリー負荷を削減し、画面 ON 時のみ 5 秒間隔で `rootInActiveWindow` と `TYPE_SYSTEM` ウィンドウを補助確認します。画面 OFF 時は自動停止し、通常の VR / 2D アプリの UI スレッドには IPC を行いません。
@@ -60,9 +63,10 @@ Galaxy XR 独自ファームウェアの仕様上、**初回 1 回だけ** 権�
 2. 初回のみ **開発者向けオプションを有効化**: 設定 → デバイス情報 → ソフトウェア情報 → **ビルド番号を 7 回タップ**
 3. `GXRAwake` の **[ワンタップ初期設定]** カードから **[開発者向けオプション]** を押し、設定ウィンドウをアプリの横に並べて表示します。
 4. **ワイヤレスデバッグ** を ON にし、**[ペア設定コードによるデバイスのペア設定]** を開きます。ペア設定ポートは mDNS で自動検出・入力されます。
-5. 表示された **6桁のペア設定コード** のみを `GXRAwake` に入力して **[ワンタップ自動設定を実行]** を押すと、以下 3 つがまとめて自動完了します。
+5. 表示された **6桁のペア設定コード** のみを `GXRAwake` に入力して **[ワンタップ自動設定を実行]** を押すと、以下 4 つがまとめて自動完了します。
    - `WRITE_SECURE_SETTINGS` 権限の付与
    - バッテリー最適化の除外登録
+   - 警告ダイアログ根本遮断（`setprop debug.ix.sysui.eyes_monitor.enabled false`）の適用
    - アクセシビリティサービスの有効化および接続確認
 
 ### 方法 2. PC / Mac からの USB 接続
@@ -79,7 +83,10 @@ adb shell pm grant com.gxrawake.app android.permission.WRITE_SECURE_SETTINGS
 # 3. 長時間の V睡眠 中のバックグラウンド停止を防ぐバッテリー最適化除外（再起動後も維持）
 adb shell dumpsys deviceidle whitelist +com.gxrawake.app
 
-# 4. アクセシビリティサービスの初期有効化
+# 4. 警告ダイアログ根本遮断（再起動まで 60秒警告・90秒自動スリープ自体を無効化）
+adb shell setprop debug.ix.sysui.eyes_monitor.enabled false
+
+# 5. アクセシビリティサービスの初期有効化（再起動後も自動復元されるセーフティネット）
 adb shell settings put secure enabled_accessibility_services com.gxrawake.app/com.gxrawake.app.service.KeepAwakeAccessibilityService
 adb shell settings put secure accessibility_enabled 1
 ```
@@ -146,6 +153,7 @@ app/src/
 │   │   │   ├── KeepAwakeAccessibilityService.kt
 │   │   │   └── RestoreAlarmReceiver.kt
 │   │   ├── setup/
+│   │   │   ├── EyesMonitorPropManager.kt
 │   │   │   ├── LocalAdbConnectionManager.kt
 │   │   │   ├── SelfSignedCertGenerator.kt
 │   │   │   └── WirelessSetupRunner.kt
@@ -160,7 +168,9 @@ app/src/
 └── test/java/com/gxrawake/app/
     ├── matcher/DialogMatcherTest.kt
     ├── service/AccessibilityStateManagerTest.kt
-    └── setup/SelfSignedCertGeneratorTest.kt
+    └── setup/
+        ├── EyesMonitorPropManagerTest.kt
+        └── SelfSignedCertGeneratorTest.kt
 ```
 
 ---
@@ -174,7 +184,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@21
 ./gradlew testDebugUnitTest assembleDebug
 ```
 
-- ユニットテスト: `DialogMatcherTest`（19件）+ `AccessibilityStateManagerTest`（4件）+ `SelfSignedCertGeneratorTest`（2件）— 合計 25 件
+- ユニットテスト: `DialogMatcherTest`（19件）+ `AccessibilityStateManagerTest`（4件）+ `EyesMonitorPropManagerTest`（3件）+ `SelfSignedCertGeneratorTest`（2件）— 合計 28 件
 - 出力 APK: `app/build/outputs/apk/debug/app-debug.apk`
 
 ---

@@ -26,6 +26,9 @@
 
 ## 주요 기능
 
+- **2중 하이브리드 꺼짐 방지**
+  - **1차 근본 차단**: 원클릭 무선 디버깅 실행 시 `setprop debug.ix.sysui.eyes_monitor.enabled false`를 함께 적용해 **재부팅 전까지 경고창 자체가 아예 뜨지 않게 차단** (아이트래킹·센서에는 영향 없음)
+  - **2차 재부팅 안전망**: 재부팅으로 `debug.*` 프로퍼티가 초기화되더라도 `WRITE_SECURE_SETTINGS` + `AlarmManager.setAndAllowWhileIdle` 기반으로 접근성 서비스가 자동 복구되어 경고창을 0.2초 만에 자동 확인
 - **저부하 이벤트 중심 경고창 감지**
   - `com.android.systemui` 전용 패키지 필터와 전용 백그라운드 스레드 `GXRAwakeScanner`로 이벤트 즉시 스캔
   - `flagIncludeNotImportantViews`를 제거해 전체 앱 접근성 트리 부하를 최소화하고, 화면이 켜져 있을 때만 5초 간격으로 `rootInActiveWindow` 및 `TYPE_SYSTEM` 윈도우를 보조 검사합니다. 화면이 꺼지면 폴링을 자동 중단하며 일반 VR/2D 앱 윈도우는 조회하지 않습니다.
@@ -60,9 +63,10 @@ Galaxy XR 펌웨어의 `SecSettings` 제한으로 인해 **최초 1회**만 권�
 2. 최초 1회 **개발자 옵션 활성화**: 설정 → 기기 정보 → 소프트웨어 정보 → **빌드번호 7회 탭**
 3. `GXRAwake` 앱의 **[원클릭 자동 설정]** 카드에서 **[개발자 옵션 열기]**를 눌러 설정 창을 앱 옆에 띄웁니다.
 4. **무선 디버깅**을 켠 뒤 **[페어링 코드로 기기 페어링]**을 누릅니다. 페어링 포트는 mDNS로 자동 감지되어 입력됩니다.
-5. 화면에 표시된 **6자리 페어링 코드**만 `GXRAwake`에 입력하고 **[원클릭 자동 설정 실행]** 버튼을 누르면 아래 3가지가 자동으로 완료됩니다.
+5. 화면에 표시된 **6자리 페어링 코드**만 `GXRAwake`에 입력하고 **[원클릭 자동 설정 실행]** 버튼을 누르면 아래 4가지가 자동으로 완료됩니다.
    - `WRITE_SECURE_SETTINGS` 권한 부여
    - 배터리 최적화 제외 등록
+   - 경고창 근본 차단(`setprop debug.ix.sysui.eyes_monitor.enabled false`) 적용
    - 접근성 서비스 자동 활성화 및 연결 확인
 
 ### 방법 2. PC / Mac USB 연결
@@ -79,7 +83,10 @@ adb shell pm grant com.gxrawake.app android.permission.WRITE_SECURE_SETTINGS
 # 3. 장시간 브수면 중 백그라운드 종료 방지를 위한 배터리 최적화 제외 (재부팅 후 유지)
 adb shell dumpsys deviceidle whitelist +com.gxrawake.app
 
-# 4. 접근성 서비스 초기 활성화
+# 4. 경고창 근본 차단 (재부팅 전까지 60초 경고창·90초 강제 슬립 자체 미발생)
+adb shell setprop debug.ix.sysui.eyes_monitor.enabled false
+
+# 5. 접근성 서비스 초기 활성화 (재부팅 후에도 자동 복구되는 안전망)
 adb shell settings put secure enabled_accessibility_services com.gxrawake.app/com.gxrawake.app.service.KeepAwakeAccessibilityService
 adb shell settings put secure accessibility_enabled 1
 ```
@@ -146,6 +153,7 @@ app/src/
 │   │   │   ├── KeepAwakeAccessibilityService.kt
 │   │   │   └── RestoreAlarmReceiver.kt
 │   │   ├── setup/
+│   │   │   ├── EyesMonitorPropManager.kt
 │   │   │   ├── LocalAdbConnectionManager.kt
 │   │   │   ├── SelfSignedCertGenerator.kt
 │   │   │   └── WirelessSetupRunner.kt
@@ -160,7 +168,9 @@ app/src/
 └── test/java/com/gxrawake/app/
     ├── matcher/DialogMatcherTest.kt
     ├── service/AccessibilityStateManagerTest.kt
-    └── setup/SelfSignedCertGeneratorTest.kt
+    └── setup/
+        ├── EyesMonitorPropManagerTest.kt
+        └── SelfSignedCertGeneratorTest.kt
 ```
 
 ---
@@ -174,7 +184,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@21
 ./gradlew testDebugUnitTest assembleDebug
 ```
 
-- 단위 테스트: `DialogMatcherTest` (19개) + `AccessibilityStateManagerTest` (4개) + `SelfSignedCertGeneratorTest` (2개) — 총 25개 테스트
+- 단위 테스트: `DialogMatcherTest` (19개) + `AccessibilityStateManagerTest` (4개) + `EyesMonitorPropManagerTest` (3개) + `SelfSignedCertGeneratorTest` (2개) — 총 28개 테스트
 - 빌드 산출물: `app/build/outputs/apk/debug/app-debug.apk`
 
 ---
